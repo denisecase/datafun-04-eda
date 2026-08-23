@@ -42,10 +42,7 @@ def load_data(
 
     df: pd.DataFrame = sns.load_dataset(dataset_name)
 
-    log.info(
-        f"Loaded: {df.shape[0]} rows, "
-        f"{df.shape[1]} columns"
-    )
+    log.info(f"Loaded: {df.shape[0]} rows, {df.shape[1]} columns")
 
     return df
 
@@ -111,23 +108,11 @@ def build_data_dictionary(
     dictionary = pd.DataFrame(
         {
             "column": df.columns,
-            "dtype": [
-                str(dtype)
-                for dtype in df.dtypes
-            ],
-            "non_missing_count": (
-                df.notna().sum().values
-            ),
-            "missing_count": (
-                df.isna().sum().values
-            ),
-            "missing_pct": (
-                df.isna().mean() * 100
-            ).round(2).values,
-            "unique_count": [
-                df[column].nunique(dropna=True)
-                for column in df.columns
-            ],
+            "dtype": [str(dtype) for dtype in df.dtypes],
+            "non_missing_count": (df.notna().sum().values),
+            "missing_count": (df.isna().sum().values),
+            "missing_pct": (df.isna().mean() * 100).round(2).values,
+            "unique_count": [df[column].nunique(dropna=True) for column in df.columns],
         }
     )
 
@@ -145,11 +130,7 @@ def get_missing_counts(
     log: logging.Logger,
 ) -> pd.Series:
     """Return missing-value counts by column."""
-    missing = (
-        df.isna()
-        .sum()
-        .sort_values(ascending=False)
-    )
+    missing = df.isna().sum().sort_values(ascending=False)
 
     log.debug(f"\n{missing}")
 
@@ -190,18 +171,12 @@ def make_analytical_view(
     """
     required = list(required_columns)
 
-    df_view = df.dropna(
-        subset=required
-    ).copy()
+    df_view = df.dropna(subset=required).copy()
 
     dropped = df.shape[0] - df_view.shape[0]
 
-    log.info(
-        f"Analytical view: {df_view.shape[0]} rows"
-    )
-    log.info(
-        f"Rows excluded: {dropped}"
-    )
+    log.info(f"Analytical view: {df_view.shape[0]} rows")
+    log.info(f"Rows excluded: {dropped}")
 
     return df_view
 
@@ -257,21 +232,18 @@ def get_grouped_numeric_summary(
     """
     columns = list(numeric_columns)
 
-    summary = (
-        df.groupby(
-            group_column,
-            observed=True,
-        )[columns]
-        .agg(
-            [
-                "count",
-                "mean",
-                "std",
-                "min",
-                "median",
-                "max",
-            ]
-        )
+    summary = df.groupby(
+        group_column,
+        observed=True,
+    )[columns].agg(
+        [
+            "count",
+            "mean",
+            "std",
+            "min",
+            "median",
+            "max",
+        ]
     )
 
     log.debug(f"\n{summary}")
@@ -302,16 +274,9 @@ def get_correlation(
     """
     complete = df[[x, y]].dropna()
 
-    correlation = float(
-        complete[x].corr(
-            complete[y]
-        )
-    )
+    correlation = float(complete[x].corr(complete[y]))
 
-    log.info(
-        f"Correlation between {x} and {y}: "
-        f"{correlation:.3f}"
-    )
+    log.info(f"Correlation between {x} and {y}: {correlation:.3f}")
 
     return correlation
 
@@ -336,8 +301,6 @@ def get_correlation_matrix(
 
     correlation_matrix = df[columns].corr()
 
-    log.debug(
-        f"\n{correlation_matrix}"
-    )
+    log.debug(f"\n{correlation_matrix}")
 
     return correlation_matrix

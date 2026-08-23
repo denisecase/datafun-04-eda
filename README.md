@@ -37,6 +37,12 @@ and are ideal for this kind of investigation.
 You will run the example notebook, read the code and narrative,
 and create your own notebook to explore a different tabular dataset.
 
+## Initial Results
+
+![One analyst-selected relationship](docs/images/one-relationship.png)
+
+![Bar chart of missing values by variable](docs/images/missing-values.png)
+
 ## Important Folders and Files
 
 - **docs/** - the project narrative and documentation

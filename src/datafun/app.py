@@ -52,10 +52,12 @@ This project illustrates several core Python and analytics skills:
 # === DECLARE IMPORTS (BRING IN FREE CODE) ===
 
 import logging
+from pathlib import Path
 from typing import Final
 
 from datafun_toolkit.logger import get_logger, log_header
 from eda_vizkit import (
+    save_chart,
     show_categorical_distribution,
     show_missing_values,
     show_numeric_distribution,
@@ -84,6 +86,9 @@ LOG: logging.Logger = get_logger("P04", level="DEBUG")
 # They do NOT change while the program runs.
 # By convention, constants use UPPERCASE_WITH_UNDERSCORES.
 # Final indicates that the value should not be reassigned.
+
+CHART_DIR: Final[Path] = Path("docs") / "images"
+CHART_DIR.mkdir(parents=True, exist_ok=True)
 
 # === DEFINE THE DATASET ===
 
@@ -211,7 +216,14 @@ def main() -> None:
     # Call the imported function show_missing_values()
     # to visualize missing values.
     # Pass in the df.
-    show_missing_values(df)
+    # get back the Axes object so we can save the chart.
+    missing_ax = show_missing_values(df)
+
+    # Save the missing values chart to the designated directory.
+    save_chart(
+        missing_ax,
+        CHART_DIR / "missing-values.png",
+    )
 
     # ============================================================
     # 04. DESCRIBE NUMERIC VARIABLES
@@ -242,9 +254,15 @@ def main() -> None:
     # to visualize the distribution of the column.
 
     for column in NUMERIC_COLUMNS:
-        show_numeric_distribution(
+        numeric_ax = show_numeric_distribution(
             df,
             column=column,
+        )
+
+        # Save the numeric distribution chart to the designated directory.
+        save_chart(
+            numeric_ax,
+            CHART_DIR / f"{column}-distribution.png",
         )
 
     # For each column in the list of categorical columns,
@@ -252,7 +270,13 @@ def main() -> None:
     # to visualize the distribution of the column.
 
     for column in CATEGORICAL_COLUMNS:
-        show_categorical_distribution(df, column=column)
+        categorical_ax = show_categorical_distribution(df, column=column)
+
+        # Save the categorical distribution chart to the designated directory.
+        save_chart(
+            categorical_ax,
+            CHART_DIR / f"{column}-distribution.png",
+        )
 
     # ============================================================
     # 06. EXPLORE A RELATIONSHIP BETWEEN TWO NUMERIC VARIABLES
@@ -285,10 +309,15 @@ def main() -> None:
         y=Y_COLUMN,
     )
 
-    # Customize the Matplotlib Axes object with a title and axis labels.
+    # CUSTOM: Analyst must customize the Matplotlib Axes object with a title and axis labels.
     relationship_ax.set_title("Penguin Flipper Length vs. Body Mass")
     relationship_ax.set_xlabel("Flipper Length (mm)")
     relationship_ax.set_ylabel("Body Mass (g)")
+
+    save_chart(
+        relationship_ax,
+        CHART_DIR / "one-relationship.png",
+    )
 
     # ============================================================
     # 07. SUMMARIZE
@@ -325,7 +354,7 @@ def main() -> None:
     # The client (like this script or a marimo notebook),
     # determines how and when to display the plots).
 
-    LOG.info("In a script, call plt.show() at the end to display all charts."  )
+    LOG.info("In a script, call plt.show() at the end to display all charts.")
     LOG.info("Close all chart windows (with the close button) to continue.")
 
     plt.show()

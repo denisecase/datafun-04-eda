@@ -81,7 +81,6 @@ def _():
         Marimo automatically updates dependent results.
         """
     )
-    return
 
 
 # === CHOOSE ONE NUMERIC VARIABLE ===
@@ -109,12 +108,9 @@ def _(numeric_column):
         column=numeric_column.value,
     )
 
-    distribution_ax.set_title(
-        f"Distribution of {numeric_column.value}"
-    )
+    distribution_ax.set_title(f"Distribution of {numeric_column.value}")
 
     distribution_ax
-    return
 
 
 # === CHOOSE TWO NUMERIC VARIABLES ===
@@ -155,12 +151,9 @@ def _(x_column, y_column):
         y=y_column.value,
     )
 
-    relationship_ax.set_title(
-        f"{y_column.value} by {x_column.value}"
-    )
+    relationship_ax.set_title(f"{y_column.value} by {x_column.value}")
 
     relationship_ax
-    return
 
 
 # === REFLECT ===
@@ -190,7 +183,6 @@ def _(x_column, y_column):
         What question would you investigate next?
         """
     )
-    return
 
 
 if __name__ == "__main__":
