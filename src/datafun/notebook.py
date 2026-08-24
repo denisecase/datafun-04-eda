@@ -1,7 +1,6 @@
 # /// script
 # requires-python = ">=3.14"
 # dependencies = [
-#     "datafun-toolkit",
 #     "eda-vizkit",
 #     "marimo",
 #     "pandas",
@@ -30,11 +29,11 @@ RUN:
 Open an integrated Terminal in the project root folder
 and run:
 
-uv run marimo edit src/datafun/notebook.py
+  uv run marimo edit src/datafun/notebook.py
 
-To run as an app:
+To run as an app (in the terminal hit CTRL+c to stop):
 
-uv run marimo run src/datafun/notebook.py
+  uv run marimo run src/datafun/notebook.py
 
 ABOUT THE FILE OPENING ABOVE:
 
@@ -43,6 +42,11 @@ uses the notebook's PEP 723 metadata.
 Marimo's current WASM guidance says that
 without a script block first, imported packages
 do not auto-install in WASM.
+
+NO LOGGING:
+
+In this notebook, we do not configure logging because a browser-based
+WASM app has no persistent Python server to store log files.
 """
 
 # === DECLARE IMPORTS AND CREATE APP ===
@@ -62,8 +66,6 @@ with app.setup:
     import marimo as mo
     import pandas as pd
 
-    from datafun.utils_eda import load_data
-
     DATASET_NAME = "penguins"
 
     NUMERIC_COLUMNS = [
@@ -73,32 +75,33 @@ with app.setup:
         "body_mass_g",
     ]
 
-    # The same notebook can run in two environments:
+    # === LOAD DATA ===
     #
-    # - In the deployed WebAssembly app, Python runs in the browser.
-    #   The browser does not have access to our local src/datafun package,
-    #   so read the dataset packaged with the deployed app.
+    # This notebook can run in two environments.
     #
-    # - When running locally, use our regular project utilities.
+    # Locally, read from the project's standard data/raw folder.
     #
-    # IMPORTANT:
-    # Local-only imports must stay inside the else branch.
-    # If imported above this condition, the browser will try to import
-    # them before it knows which execution path to use.
+    # When deployed as a WebAssembly app, Python runs in the browser.
+    # The deployment workflow copies the dataset into the app's
+    # public folder so the browser can access it.
+    #
+    # We intentionally omit project logging here. Logging works in
+    # marimo, but a browser-based WASM app has no persistent Python
+    # server where a project.log file would naturally live.
+
+    notebook_location = mo.notebook_location()
+
+    if notebook_location is None:
+        raise RuntimeError("Unable to determine notebook location.")
+
+    filename = f"{DATASET_NAME}.csv"
+
     if sys.platform == "emscripten":
-        data_path = mo.notebook_location() / "public" / "penguins.csv"
-        df = pd.read_csv(str(data_path))
+        data_path = notebook_location / "public" / filename
     else:
-        from datafun_toolkit.logger import get_logger
+        data_path = notebook_location.parents[1] / "data" / "raw" / filename
 
-        from datafun.utils_eda import load_data
-
-        LOG = get_logger("P04-MARIMO", level="DEBUG")
-
-        df: pd.DataFrame = load_data(
-            dataset_name=DATASET_NAME,
-            log=LOG,
-        )
+    df = pd.read_csv(str(data_path))
 
 
 @app.cell
