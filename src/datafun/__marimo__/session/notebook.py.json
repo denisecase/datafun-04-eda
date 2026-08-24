@@ -1,0 +1,58 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.24.0",
+    "script_metadata_hash": null
+  },
+  "cells": [
+    {
+      "id": "setup",
+      "code_hash": "c7c8eab12cc2926df37d140c40e4ee95",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "Hbol",
+      "code_hash": "53b655b384ef875b01881da58bbaa267",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"reactive-exploratory-data-analysis\">Reactive Exploratory Data Analysis</h1>\n<span class=\"paragraph\">Explore the Palmer Penguins dataset interactively.</span>\n<span class=\"paragraph\">Use the controls below to change the variable being explored.\nMarimo automatically updates dependent results.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "6851d26cc021521a225944464baea50f",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "7eaaea4a79575e465e1c00bf2fa2116d",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "87fbec74acea8854774ac714ec6801c9",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "831719c0ef188e0352152a82b6f97f79",
+      "outputs": [],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "7f11820858bb7533344808e026ea6d40",
+      "outputs": [],
+      "console": []
+    }
+  ]
+}

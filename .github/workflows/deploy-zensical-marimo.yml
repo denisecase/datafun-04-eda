@@ -1,0 +1,162 @@
+# ============================================================
+# .github/workflows/deploy-zensical-marimo.yml (ALL-PY-SRC-MARIMO REPOS)
+# ============================================================
+# Updated: 2026-08-24
+#
+# WHY: Build and deploy Zensical documentation and a Marimo reactive app
+#      to one GitHub Pages site on pushes to main.
+# REQ: Repo Settings -> Pages -> Build and deployment -> Source:
+#      GitHub Actions
+# WHY: Without this setting, the deploy-pages action will fail with a 403.
+# REQ: Repository MUST contain .python-version.
+# REQ: Repository MUST contain src/datafun/notebook.py.
+# REQ: Deployment MUST use the committed uv.lock without updating it.
+# OBS: Zensical is published at the site root.
+# OBS: The Marimo reactive app is published under /app/.
+
+
+# Name shown in the repo Actions tab.
+name: Docs Deploy (Zensical+Marimo)
+
+on:
+  push:
+    branches: [main]  # WHY: Deploy docs on every push to GitHub branch `main`.
+  workflow_dispatch:  # WHY: Allow manual trigger from Actions tab.
+
+permissions:
+  contents: read   # WHY: Needed to checkout code.
+  pages: write     # WHY: Required to deploy to GitHub Pages.
+  id-token: write  # WHY: Required by deploy-pages for OIDC authentication.
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+  # WHY: GitHub Pages is a shared deployment target.
+  # OBS: Do not cancel an in-progress Pages deployment with another deployment.
+
+env:
+  PYTHONUNBUFFERED: "1"     # WHY: Real-time log output in CI.
+  PYTHONIOENCODING: "utf-8" # WHY: Consistent encoding across platforms.
+  UV_FROZEN: "1"            # WHY: Deployment MUST use uv.lock without updating it.
+
+jobs:
+  docs:
+    name: Deploy Documentation site
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # WHY: Fail fast if a step hangs unexpectedly.
+
+    steps:
+      # ============================================================
+      # A) ASSEMBLE: Checkout code and set up environment
+      # ============================================================
+
+      - name: A1) Checkout repository code
+        uses: actions/checkout@v7
+        # WHY: Required so all subsequent steps can access repo files.
+
+      - name: A2) Configure GitHub Pages
+        uses: actions/configure-pages@v6
+        # WHY: Sets Pages metadata used by upload-pages-artifact and deploy-pages.
+        # OBS: Must run before the build step so base URL is available if needed.
+
+      - name: A3) Install uv (with caching)
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+          # WHY: Invalidate dependency cache when the committed lockfile changes.
+
+      - name: A4) Install project Python
+        run: uv python install
+        # WHY: Ensures the Python version declared in .python-version is available.
+        # OBS: uv manages the interpreter locally in the CI environment.
+
+      - name: A5) Install dependencies from committed lockfile
+        run: uv sync --frozen
+        # WHY: Install all configured dependency groups from uv.lock.
+        # REQ: Deployment MUST fail rather than update a stale lockfile.
+
+      - name: A6) Show tool versions
+        run: |
+          uv --version
+          uv run python --version
+          uv run marimo --version
+          if [ -f "zensical.toml" ]; then
+            uv run python -m zensical --version
+          fi
+        # WHY: Version output makes deployment logs easier to debug when tools change.
+
+      # ============================================================
+      # B) VALIDATE: Check Marimo deployment compatibility
+      # ============================================================
+
+      - name: B1) Check Marimo WebAssembly compatibility
+        run: uv run marimo check src/datafun/notebook.py --select MW
+        # WHY: Catch imports and dependencies that cannot execute in WebAssembly.
+        # OBS: The deployed app executes Python in the browser using Pyodide.
+
+      # ============================================================
+      # D) DEPLOY: Build and publish docs + reactive app
+      # ============================================================
+
+      - name: D1) Build docs with Zensical
+        run: |
+          if [ ! -f "zensical.toml" ]; then
+            echo "zensical.toml not found; refusing to deploy." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          uv run python -m zensical build
+        # WHY: Build the documentation site into site/.
+
+      - name: D2) Stage Marimo app data
+        run: |
+          mkdir -p src/datafun/public
+          cp data/raw/penguins.csv src/datafun/public/penguins.csv
+        # WHY: Marimo includes a notebook's public/ folder in WASM exports.
+
+      - name: D3) Export Marimo reactive app
+        run: |
+          mkdir -p site/app
+          uv run marimo export html-wasm \
+            --mode run \
+            --no-show-code \
+            src/datafun/notebook.py \
+            -o site/app
+        # WHY: Add the reactive Marimo application to the same Pages site.
+        # OBS: The app will be published at /app/.
+
+      - name: D4) Verify combined site output exists
+        run: |
+          if [ ! -d "site" ]; then
+            echo "## Documentation build output missing" >> "$GITHUB_STEP_SUMMARY"
+            echo "Expected directory 'site/' was not created." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ ! -f "site/index.html" ]; then
+            echo "## Documentation index missing" >> "$GITHUB_STEP_SUMMARY"
+            echo "Expected file 'site/index.html' was not created." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ ! -f "site/app/index.html" ]; then
+            echo "## Marimo app output missing" >> "$GITHUB_STEP_SUMMARY"
+            echo "Expected file 'site/app/index.html' was not created." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+          if [ ! -d "site/app/assets" ]; then
+            echo "## Marimo assets missing" >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+        # WHY: Verify both parts of the combined Pages site before deployment.
+
+      - name: D5) Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+        # WHY: Package the complete documentation + app site for deployment.
+
+      - name: D6) Deploy to GitHub Pages
+        uses: actions/deploy-pages@v5
+        # WHY: Publish the single combined site to GitHub Pages.
