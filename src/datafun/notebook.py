@@ -115,7 +115,8 @@ def _():
     Use the controls below to change the variable being explored.
     Marimo automatically updates dependent results.
 
-    [Source code](https://github.com/denisecase/datafun-04-eda/blob/main/src/datafun/notebook.py)
+    [Project Source](https://github.com/denisecase/datafun-04-eda/blob/main/src/datafun/notebook.py)
+    | [Project Docs](https://denisecase.github.io/datafun-04-eda/)
     """)
     return
 
