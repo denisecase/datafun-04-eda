@@ -77,17 +77,13 @@ with app.setup:
 
     # === LOAD DATA ===
     #
-    # This notebook can run in two environments.
+    # The same notebook runs in two environments.
     #
-    # Locally, read from the project's standard data/raw folder.
+    # Locally, pandas reads the CSV directly from data/raw.
     #
-    # When deployed as a WebAssembly app, Python runs in the browser.
-    # The deployment workflow copies the dataset into the app's
-    # public folder so the browser can access it.
-    #
-    # We intentionally omit project logging here. Logging works in
-    # marimo, but a browser-based WASM app has no persistent Python
-    # server where a project.log file would naturally live.
+    # In the deployed WebAssembly app, Python runs in the browser.
+    # Use Pyodide's browser-aware open_url() to fetch the CSV and
+    # pass its text contents to pandas.
 
     notebook_location = mo.notebook_location()
 
@@ -97,11 +93,13 @@ with app.setup:
     filename = f"{DATASET_NAME}.csv"
 
     if sys.platform == "emscripten":
-        data_path = notebook_location / "public" / filename
+        from pyodide.http import open_url
+
+        data_url = notebook_location / "public" / filename
+        df = pd.read_csv(open_url(str(data_url)))
     else:
         data_path = notebook_location.parents[1] / "data" / "raw" / filename
-
-    df = pd.read_csv(str(data_path))
+        df = pd.read_csv(data_path)
 
 
 @app.cell
