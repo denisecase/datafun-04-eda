@@ -11,6 +11,11 @@
 Author: Denise Case
 Date: 2026-08
 
+REQUIREMENTS:
+
+1. Add marimo to notebooks in pyproject.toml
+2. Install the required dependencies using `uv sync`.
+
 DOMAIN: Penguins
 
 Explore a dataset of penguins with a small reactive interface.
@@ -47,6 +52,23 @@ NO LOGGING:
 
 In this notebook, we do not configure logging because a browser-based
 WASM app has no persistent Python server to store log files.
+
+FIRST: IMPORT AND APP SETUP (ALWAYS)
+
+THEN: PLAN CELLS FIRST - I want these cells:
+
+1. _opening
+2. _choose_first_column
+3. _show_distribution
+4. _choose_second_column
+5. _show_relationship
+6. _closing
+
+Note: No need to call @app.cell functions in marimo,
+it triggers them automagically.
+I could name them all "_", but I choose to
+give them internal function names starting with "_"
+so I can organize my thinking and my app.
 """
 
 # === DECLARE IMPORTS AND CREATE APP ===
@@ -103,7 +125,7 @@ with app.setup:
 
 
 @app.cell
-def _():
+def _opening():
     # Use mo.md() to display markdown content in the opening cell.
     mo.md(r"""
     # Reactive Exploratory Data Analysis
@@ -116,11 +138,10 @@ def _():
     [Project Source](https://github.com/denisecase/datafun-04-eda/blob/main/src/datafun/notebook.py)
     | [Project Docs](https://denisecase.github.io/datafun-04-eda/)
     """)
-    return
 
 
 @app.cell
-def _():
+def _choose_first_column():
 
     # Use mo.ui.dropdown() to create a dropdown control for selecting a numeric column.
     numeric_column = mo.ui.dropdown(
@@ -138,7 +159,7 @@ def _():
 
 
 @app.cell
-def _(numeric_column):
+def _show_distribution(numeric_column):
 
     # Use a helper function imported above
     # To generate and return a distribution plot
@@ -153,11 +174,10 @@ def _(numeric_column):
 
     # Display it
     distribution_ax
-    return
 
 
 @app.cell
-def _():
+def _choose_second_column():
 
     # Use mo.ui.dropdown() to create a dropdown control for selecting the X variable.
     x_column = mo.ui.dropdown(
@@ -189,7 +209,7 @@ def _():
 
 
 @app.cell
-def _(x_column, y_column):
+def _show_relationship(x_column, y_column):
 
     # Use the helper function imported above
     # To generate and return a scatter plot
@@ -208,11 +228,11 @@ def _(x_column, y_column):
 
     # Display it.
     relationship_ax
-    return
 
 
 @app.cell
-def _(x_column, y_column):
+def _closing(x_column, y_column):
+    # Use markdown to display closing thoughts and insights
     mo.md(f"""
     ## What do you notice?
 
@@ -233,7 +253,6 @@ def _(x_column, y_column):
 
     What question would you investigate next?
     """)
-    return
 
 
 if __name__ == "__main__":
