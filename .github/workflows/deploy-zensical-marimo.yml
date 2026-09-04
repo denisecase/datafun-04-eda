@@ -99,7 +99,7 @@ jobs:
       # D) DEPLOY: Build and publish docs + reactive app
       # ============================================================
 
-      - name: D1) Build docs with Zensical
+      - name: D1) Build docs with Zensical FIRST
         run: |
           if [ ! -f "zensical.toml" ]; then
             echo "zensical.toml not found; refusing to deploy." >> "$GITHUB_STEP_SUMMARY"
@@ -110,11 +110,18 @@ jobs:
 
       - name: D2) Stage Marimo app data
         run: |
+          if [ ! -f "data/raw/penguins.csv" ]; then
+            echo "## Marimo data missing" >> "$GITHUB_STEP_SUMMARY"
+            echo "Expected data/raw/penguins.csv was not found." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
           mkdir -p src/datafun/public
           cp data/raw/penguins.csv src/datafun/public/penguins.csv
-        # WHY: Marimo includes a notebook's public/ folder in WASM exports.
+        # WHY: Marimo includes a notebook's adjacent public/ folder in WASM exports.
+        # REQ: MUST run before D3; the export bundles public/ at export time, so
+        #      staging after the export would ship an app whose data 404s.
 
-      - name: D3) Export Marimo reactive app
+      - name: D3) Export Marimo reactive app AFTER
         run: |
           mkdir -p site/app
           uv run marimo export html-wasm \
@@ -122,8 +129,7 @@ jobs:
             --no-show-code \
             src/datafun/notebook.py \
             -o site/app
-        # WHY: Add the reactive Marimo application to the same Pages site.
-        # OBS: The app will be published at /app/.
+        # WHY: Add the reactive Marimo application to the same Pages site at /app/.
 
       - name: D4) Verify combined site output exists
         run: |
